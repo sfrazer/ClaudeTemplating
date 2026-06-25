@@ -79,7 +79,7 @@ mkdir -p "$PROJECT_ROOT/scripts"
 manifest_lines=()
 record() {
   local category="$1" src="$2" dest_rel="$3"
-  manifest_lines+=("$category $(file_hash "$src") ${src#$SHARED_REPO/} $dest_rel")
+  manifest_lines+=("$category $(file_hash "$src") ${src#"$SHARED_REPO"/} $dest_rel")
 }
 
 # --- Copy command files ---------------------------------------------------------
@@ -109,7 +109,7 @@ templates_skipped=0
 if [[ -d "$ASSET_DIR/templates" ]]; then
   copied_templates=true
   while IFS= read -r tf; do
-    rel="${tf#$ASSET_DIR/templates/}"
+    rel="${tf#"$ASSET_DIR"/templates/}"
     dest="$PROJECT_ROOT/$rel"
     mkdir -p "$(dirname "$dest")"
     if [[ -e "$dest" ]]; then
@@ -128,9 +128,15 @@ fi
 # order (wiki-contract, then git-workflow), then asset snippets alphabetically.
 snippet_files=("$GENERIC_DIR/claude-snippets/wiki-contract.md" "$GENERIC_DIR/claude-snippets/git-workflow.md")
 if [[ "$ASSET_DIR_NAME" != "generic" && -d "$ASSET_DIR/claude-snippets" ]]; then
-  while IFS= read -r f; do
-    snippet_files+=("$f")
-  done < <(printf '%s\n' "$ASSET_DIR/claude-snippets"/*.md | sort)
+  shopt -s nullglob
+  asset_snippets=("$ASSET_DIR/claude-snippets"/*.md)
+  shopt -u nullglob
+  # Guard the array expansion: an empty array under `set -u` errors on bash 3.2.
+  if [[ ${#asset_snippets[@]} -gt 0 ]]; then
+    while IFS= read -r f; do
+      snippet_files+=("$f")
+    done < <(printf '%s\n' "${asset_snippets[@]}" | sort)
+  fi
 fi
 
 claude_created=false

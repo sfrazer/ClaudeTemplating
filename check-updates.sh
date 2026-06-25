@@ -53,23 +53,23 @@ enumerate_candidates() {
   asset="$(asset_dir_for "$type")"
   shopt -s nullglob
   for f in "$SHARED_REPO/generic/commands"/*.md; do
-    echo "command ${f#$SHARED_REPO/} .claude/commands/$(basename "$f")"
+    echo "command ${f#"$SHARED_REPO"/} .claude/commands/$(basename "$f")"
   done
   for f in "$SHARED_REPO/generic/claude-snippets"/*.md; do
-    echo "snippet ${f#$SHARED_REPO/} CLAUDE.md"
+    echo "snippet ${f#"$SHARED_REPO"/} CLAUDE.md"
   done
   if [[ "$asset" != "generic" ]]; then
     for f in "$SHARED_REPO/$asset/commands"/*.md; do
-      echo "command ${f#$SHARED_REPO/} .claude/commands/$(basename "$f")"
+      echo "command ${f#"$SHARED_REPO"/} .claude/commands/$(basename "$f")"
     done
     for f in "$SHARED_REPO/$asset/claude-snippets"/*.md; do
-      echo "snippet ${f#$SHARED_REPO/} CLAUDE.md"
+      echo "snippet ${f#"$SHARED_REPO"/} CLAUDE.md"
     done
   fi
   shopt -u nullglob
   if [[ -d "$SHARED_REPO/$asset/templates" ]]; then
     while IFS= read -r f; do
-      echo "template ${f#$SHARED_REPO/} ${f#$SHARED_REPO/$asset/templates/}"
+      echo "template ${f#"$SHARED_REPO"/} ${f#"$SHARED_REPO"/"$asset"/templates/}"
     done < <(find "$SHARED_REPO/$asset/templates" -type f ! -name .DS_Store)
   fi
 }
