@@ -162,21 +162,19 @@ For example, a test for `source/gameplay/spawner.gd` lives at `source/debug/test
 
 #### Running Tests (Headless)
 
-The project must be imported before the first headless run. Import once with:
+Run the full suite with the `/run-tests` command, which invokes `scripts/run_tests.sh`.
+That script ships with the project template; it resolves the Godot binary (`GODOT_BIN`,
+then `godot4`/`godot` on `PATH`, then the default macOS app path), runs
+`--headless --import` first so a fresh clone or CI runner is set up, then runs the GUT
+suite and prints and propagates its own exit code (so callers never need
+`${PIPESTATUS[0]}` to read the result through a pipe).
+
+If for some reason `scripts/run_tests.sh` is missing, run the suite directly:
 
 ```sh
-godot --headless --import
-```
-
-A script to run all tests should be placed in scripts/run_tests.sh and can be called in the future with the /run-tests claude command. That script should contain:
-
-
-```sh
-#!/bin/bash
+godot --headless --import          # once, to import the project
 godot --headless -s res://addons/gut/gut_cmdln.gd
 ```
-Then run the full suite with:
-/run-tests
 
 **Important:** use `gut_cmdln.gd`, not `gut_cli.gd`. `gut_cli.gd` extends `Node` and cannot be used with `-s`; `gut_cmdln.gd` extends `SceneTree` and works correctly. GUT reads `.gutconfig.json` at the project root and exits non-zero if any tests fail.
 
