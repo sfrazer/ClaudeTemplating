@@ -18,7 +18,10 @@ godot/                   # Godot-game assets
 interviews/
   base.md                # The core requirements interview
   overlays/              # Per-project-type interview additions (e.g. godot-game.md)
+lib/
+  common.sh              # Shared helpers sourced by both scripts
 setup.sh                 # The assembler
+check-updates.sh         # Detect/apply shared-repo changes in an existing project
 ```
 
 Snippets in `claude-snippets/` are concatenated into a starter `CLAUDE.md`. Files in
@@ -48,6 +51,8 @@ autocomplete).
    - Assemble a starter `CLAUDE.md` from the snippets (only if one does not already
      exist), ending with a `## Project` section for you to fill in.
    - Assemble `INTERVIEW.md` from `interviews/base.md` plus the matching overlay.
+   - Write `.claude/.template-manifest` recording the project type and the
+     install-time hash of every file it placed (used by `check-updates.sh`).
 
 4. Run `INTERVIEW.md` in a fresh Claude Code session to complete project setup, then
    commit the assembled files to your project repo.
@@ -75,16 +80,36 @@ git clone <repo-url> ~/.claude-shared
    - `commands/*.md` — slash commands copied into `.claude/commands/`.
    - `templates/...` — files mirrored into the project root, preserving structure.
 2. Add an interview overlay at `interviews/overlays/<project-type>.md` (optional).
-3. Register the type in `setup.sh`:
+3. Register the type in `lib/common.sh` (shared by both scripts):
    - Add it to the `PROJECT_TYPES` array.
    - Add a `case` entry in `asset_dir_for()` mapping the project type to its folder
      (the project type and folder name can differ, e.g. `godot-game` → `godot`).
 
-## Updating an existing project when shared snippets change
+## Updating an existing project when shared files change
 
-1. Pull the latest in this repo (or let `setup.sh` do it — it runs `git pull` first).
-2. Re-run `setup.sh <project-type>` from the project root.
-3. Commands and templates are re-copied (templates never overwrite existing files);
-   `CLAUDE.md` is **not** overwritten if it already exists. Review the diff with
-   `git diff` and reconcile any snippet changes into your project's `CLAUDE.md` by
-   hand.
+Use `check-updates.sh` from the project root. It compares the project's installed
+files against the shared repo using the manifest `setup.sh` wrote, and tells new
+commands/templates apart from ones you have edited locally:
+
+```bash
+"$CLAUDE_SHARED_REPO/check-updates.sh"            # report drift, exit non-zero if any
+"$CLAUDE_SHARED_REPO/check-updates.sh" --apply    # install new/updated commands & templates
+"$CLAUDE_SHARED_REPO/check-updates.sh" --apply --force  # also overwrite locally-edited files
+```
+
+Other flags: `--no-pull` (skip the `git pull` of the shared repo), `--type <type>`
+(needed only in the no-manifest fallback below). The report groups findings as **NEW**,
+**UPDATE**, **MISSING**, **LOCALLY MODIFIED**, **SNIPPET DRIFT**, and **REMOVED
+UPSTREAM**; it exits non-zero while actionable drift remains, so it works in a pre-PR
+check.
+
+Notes:
+- **Snippets are report-only.** They are concatenated into `CLAUDE.md`, which is
+  hand-assembled, so the checker flags snippet changes but never edits `CLAUDE.md`.
+  Reconcile those by hand (or re-run `setup.sh` in a throwaway dir and diff). Snippet
+  drift keeps being reported until `CLAUDE.md` reflects the change.
+- **Locally modified files** are skipped by `--apply` unless you add `--force`.
+- **No manifest?** Projects set up before the manifest existed fall back to a direct
+  content comparison (which cannot distinguish a local edit from an upstream update).
+  Pass `--type <project-type>`, or just re-run `setup.sh <project-type>` once to
+  generate a manifest for precise checks going forward.
