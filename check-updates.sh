@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
     --no-pull) PULL=false ;;
     --type)    TYPE_ARG="${2:-}"; shift ;;
     -h|--help)
-      sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '2,/^# Exit codes/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
       exit 0 ;;
     *) echo "ERROR: unknown argument '$1'" >&2; exit 1 ;;
   esac
@@ -91,13 +91,18 @@ if [[ -f "$MANIFEST" ]]; then
     echo "ERROR: manifest has missing or unknown project type." >&2
     exit 1
   fi
+  if [[ -n "$TYPE_ARG" && "$TYPE_ARG" != "$MANIFEST_TYPE" ]]; then
+    echo "ERROR: --type '$TYPE_ARG' conflicts with manifest type '$MANIFEST_TYPE'." >&2
+    echo "       --type is only for the no-manifest fallback; omit it here." >&2
+    exit 1
+  fi
 
   # Parse manifest entries into parallel arrays.
   m_cat=(); m_hash=(); m_src=(); m_dest=()
   snippets_tracked=false
   while IFS= read -r line; do
     case "$line" in
-      ""|\#*|type=*|generated=*) continue ;;
+      ""|\#*|type=*|generated=*|claude_md=*) continue ;;
     esac
     read -r c h s d <<< "$line"
     m_cat+=("$c"); m_hash+=("$h"); m_src+=("$s"); m_dest+=("$d")

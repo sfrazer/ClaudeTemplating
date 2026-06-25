@@ -4,7 +4,12 @@ Distilled from project architecture and lessons-learned documentation.
 
 ### Running Godot internally
 
-`godot` shoule be set up as an alias to the godot executable. On MacOS this is typically `/Applications/Godot.app/Contents/MacOS/Godot`
+Put a real `godot` (or `godot4`) executable on your `PATH`, or set the `GODOT_BIN`
+environment variable to its full path — on macOS this is typically
+`/Applications/Godot.app/Contents/MacOS/Godot`. Do **not** rely on a shell alias:
+aliases are only available in interactive shells and are not visible to scripts such
+as `godot_screenshot.sh`, which look up `GODOT_BIN`, then `godot4`/`godot` on `PATH`,
+then the default macOS app path.
 
 ### Project Structure
 

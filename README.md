@@ -24,11 +24,24 @@ setup.sh                 # The assembler
 check-updates.sh         # Detect/apply shared-repo changes in an existing project
 ```
 
-Snippets in `claude-snippets/` are concatenated into a starter `CLAUDE.md`. Files in
-`commands/` follow the [Claude Code slash-command format](https://code.claude.com/docs/en/slash-commands):
+Snippets in `claude-snippets/` are concatenated into a starter `CLAUDE.md`. The
+generic snippets come first in a **fixed order** — `wiki-contract.md` then
+`git-workflow.md` — followed by the project-type's snippets in **alphabetical** order.
+(The generic order is hard-coded in `setup.sh` so the wiki contract always leads; only
+asset snippets are sorted.) Files in `commands/` follow the
+[Claude Code slash-command format](https://code.claude.com/docs/en/slash-commands):
 each `.md` file under a project's `.claude/commands/` becomes `/<filename>` (optional
 YAML frontmatter such as `description` and `argument-hint` controls how it appears in
 autocomplete).
+
+### Command prerequisites
+
+- **`/code-review`** runs the Ollama `pi` harness with a cloud model. Install the
+  harness and make a model available; the model defaults to `glm-5.2:cloud` and can
+  be overridden with the `CODE_REVIEW_MODEL` environment variable.
+- **`/run-tests`** runs `scripts/run_tests.sh`. If that script is absent the command
+  reports "tests not configured" rather than failing — create it (see the Godot
+  conventions snippet for a GUT example) to enable the suite.
 
 ## Using it for a new project
 

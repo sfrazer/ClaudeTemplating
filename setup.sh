@@ -8,12 +8,20 @@
 #
 # The shared commands repo (the repo this script lives in) is located via the
 # CLAUDE_SHARED_REPO environment variable, defaulting to ~/.claude-shared.
+#
+# Supported project types: generic, godot-game.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
+
+case "${1:-}" in
+  -h|--help)
+    sed -n '2,/^# Supported project types/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    exit 0 ;;
+esac
 
 # --- Resolve the shared repo ----------------------------------------------------
 SHARED_REPO="$(resolve_shared_repo)" || exit 1
@@ -22,6 +30,12 @@ SHARED_REPO="$(resolve_shared_repo)" || exit 1
 PROJECT_TYPE="${1:-}"
 
 if [[ -z "$PROJECT_TYPE" ]]; then
+  if [[ ! -t 0 ]]; then
+    echo "ERROR: no project type given and not running interactively." >&2
+    echo "       Pass one as an argument, e.g. setup.sh godot-game" >&2
+    echo "       Supported: ${PROJECT_TYPES[*]}" >&2
+    exit 1
+  fi
   echo "Select a project type:"
   select choice in "${PROJECT_TYPES[@]}"; do
     if [[ -n "${choice:-}" ]]; then
@@ -30,6 +44,10 @@ if [[ -z "$PROJECT_TYPE" ]]; then
     fi
     echo "Invalid selection — try again."
   done
+  if [[ -z "$PROJECT_TYPE" ]]; then
+    echo "ERROR: no project type selected." >&2
+    exit 1
+  fi
 fi
 
 ASSET_DIR_NAME="$(asset_dir_for "$PROJECT_TYPE")"
@@ -87,13 +105,18 @@ fi
 
 # --- Copy templates (preserve structure, do not overwrite) ----------------------
 copied_templates=false
+templates_skipped=0
 if [[ -d "$ASSET_DIR/templates" ]]; then
   copied_templates=true
   while IFS= read -r tf; do
     rel="${tf#$ASSET_DIR/templates/}"
     dest="$PROJECT_ROOT/$rel"
     mkdir -p "$(dirname "$dest")"
-    [[ -e "$dest" ]] || cp "$tf" "$dest"   # never overwrite an existing file
+    if [[ -e "$dest" ]]; then
+      templates_skipped=$((templates_skipped + 1))   # never overwrite an existing file
+    else
+      cp "$tf" "$dest"
+    fi
     # Record the source regardless of whether we skipped a pre-existing file —
     # the checker compares against the project copy and flags local edits.
     record template "$tf" "$rel"
@@ -101,9 +124,8 @@ if [[ -d "$ASSET_DIR/templates" ]]; then
 fi
 
 # --- Assemble CLAUDE.md ---------------------------------------------------------
-# Snippet sources, in concatenation order. Recorded in the manifest only when we
-# actually assemble CLAUDE.md (so the checker doesn't claim a hand-written
-# CLAUDE.md is in sync with these snippets).
+# Snippet sources, in concatenation order: the generic snippets first in a fixed
+# order (wiki-contract, then git-workflow), then asset snippets alphabetically.
 snippet_files=("$GENERIC_DIR/claude-snippets/wiki-contract.md" "$GENERIC_DIR/claude-snippets/git-workflow.md")
 if [[ "$ASSET_DIR_NAME" != "generic" && -d "$ASSET_DIR/claude-snippets" ]]; then
   while IFS= read -r f; do
@@ -144,11 +166,16 @@ TODO
 EOF
   } > "$PROJECT_ROOT/CLAUDE.md"
   claude_created=true
-
-  for f in "${snippet_files[@]}"; do
-    record snippet "$f" "CLAUDE.md"
-  done
 fi
+
+# Record snippet sources unconditionally so check-updates can detect upstream
+# snippet drift even when CLAUDE.md was hand-written (pre-existing). The checker
+# compares each snippet's current source hash against the recorded one — that
+# works regardless of CLAUDE.md's contents. The claude_md header below notes
+# whether we assembled CLAUDE.md or left an existing one in place.
+for f in "${snippet_files[@]}"; do
+  record snippet "$f" "CLAUDE.md"
+done
 
 # --- Assemble INTERVIEW.md ------------------------------------------------------
 {
@@ -162,9 +189,11 @@ fi
 } > "$PROJECT_ROOT/INTERVIEW.md"
 
 # --- Write the install manifest -------------------------------------------------
+if [[ "$claude_created" == true ]]; then claude_md_state=assembled; else claude_md_state=preexisting; fi
 {
   echo "# ClaudeTemplating install manifest — managed by setup.sh; do not edit"
   echo "type=$PROJECT_TYPE"
+  echo "claude_md=$claude_md_state"
   echo "generated=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo
   echo "# <category> <source-sha256> <source-rel-path> <dest-rel-path>"
@@ -180,6 +209,10 @@ for c in "${copied_commands[@]}"; do
 done
 if [[ "$copied_templates" == true ]]; then
   echo "Templates copied from $ASSET_DIR_NAME/templates/ (existing files preserved)."
+  if [[ "$templates_skipped" -gt 0 ]]; then
+    echo "  ($templates_skipped template file(s) already existed and were left untouched;"
+    echo "   they will show as LOCALLY MODIFIED in check-updates until reconciled.)"
+  fi
 fi
 if [[ "$claude_created" == true ]]; then
   echo "CLAUDE.md assembled (fill in the ## Project section)."

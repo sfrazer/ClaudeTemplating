@@ -1,16 +1,23 @@
 ---
-description: Run a code review with the Ollama cloud model, save findings, and address them before any PR.
+description: Run a code review with the configured Ollama model, save findings, and address them before any PR.
 ---
 
-Run a code review using the Ollama cloud model.
+Run a code review using the Ollama `pi` harness.
 
-1. Run the following command from the project root:
+Prerequisites: the Ollama `pi` harness must be installed and a review model
+available. The model defaults to `glm-5.2:cloud` but can be overridden with the
+`CODE_REVIEW_MODEL` environment variable.
 
-    ollama launch pi --model glm-5.2:cloud -- -p "review this code and return your findings"
+1. Determine the model: use `$CODE_REVIEW_MODEL` if set, otherwise `glm-5.2:cloud`.
+   Run the following from the project root (substituting the model):
+
+    ollama launch pi --model "${CODE_REVIEW_MODEL:-glm-5.2:cloud}" -- -p "review this code and return your findings"
 
 2. Create the `docs/codereviews/` directory if it does not exist.
-3. Save the full output to `docs/codereviews/` with a descriptive filename that
-   includes the date and a short description of what was reviewed.
+3. Capture the command's full output and save it to `docs/codereviews/` with a
+   descriptive filename that includes the date and a short description of what was
+   reviewed. (You — Claude — are responsible for writing the file; the command above
+   does not redirect output itself.)
 4. Read the saved output in full.
 5. For each finding: either fix the issue, or write a brief explanation of why
    the finding is incorrect or does not apply. Document your responses alongside

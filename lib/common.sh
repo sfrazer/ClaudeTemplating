@@ -3,6 +3,9 @@
 # Source this file; do not execute it directly.
 
 # Supported project types and their asset directory inside the shared repo.
+# Part of the sourced contract: setup.sh and check-updates.sh both rely on
+# PROJECT_TYPES (menus/validation) and asset_dir_for (type -> folder mapping).
+# Any new script that sources this file gets the same supported-type set.
 # shellcheck disable=SC2034  # consumed by scripts that source this file
 PROJECT_TYPES=("generic" "godot-game")
 
