@@ -9,8 +9,9 @@ choose.
 
 ```
 generic/                 # Applies to every project type
-  claude-snippets/       # CLAUDE.md building blocks (wiki contract, git workflow)
+  claude-snippets/       # CLAUDE.md building blocks (wiki contract, git workflow, bash conventions)
   commands/              # Slash commands copied into every project
+  templates/             # Files copied into every project (e.g. scripts/code_review.sh)
 godot/                   # Godot-game assets
   claude-snippets/       # Godot conventions snippet
   commands/              # Godot-specific slash commands
@@ -25,10 +26,10 @@ check-updates.sh         # Detect/apply shared-repo changes in an existing proje
 ```
 
 Snippets in `claude-snippets/` are concatenated into a starter `CLAUDE.md`. The
-generic snippets come first in a **fixed order** — `wiki-contract.md` then
-`git-workflow.md` — followed by the project-type's snippets in **alphabetical** order.
-(The generic order is hard-coded in `setup.sh` so the wiki contract always leads; only
-asset snippets are sorted.) Files in `commands/` follow the
+generic snippets come first in a **fixed order** — `wiki-contract.md`, `git-workflow.md`,
+then `bash-conventions.md` — followed by the project-type's snippets in **alphabetical**
+order. (The generic order is hard-coded in `setup.sh` so the wiki contract always leads;
+only asset snippets are sorted.) Files in `commands/` follow the
 [Claude Code slash-command format](https://code.claude.com/docs/en/slash-commands):
 each `.md` file under a project's `.claude/commands/` becomes `/<filename>` (optional
 YAML frontmatter such as `description` and `argument-hint` controls how it appears in
@@ -36,12 +37,15 @@ autocomplete).
 
 ### Command prerequisites
 
-- **`/code-review`** runs the Ollama `pi` harness with a cloud model. Install the
-  harness and make a model available; the model defaults to `glm-5.2:cloud` and can
-  be overridden with the `CODE_REVIEW_MODEL` environment variable.
-- **`/run-tests`** runs `scripts/run_tests.sh`. If that script is absent the command
-  reports "tests not configured" rather than failing — create it (see the Godot
-  conventions snippet for a GUT example) to enable the suite.
+- **`/code-review`** runs `scripts/code_review.sh` (shipped as a generic template),
+  which drives the Ollama `pi` harness with a cloud model. Install the harness and make
+  a model available; the model defaults to `glm-5.2:cloud` and can be overridden with
+  the `CODE_REVIEW_MODEL` environment variable. The script keeps the model-defaulting
+  logic out of the invocation so the command stays auto-approvable.
+- **`/run-tests`** runs `scripts/run_tests.sh`. The Godot template ships a GUT runner
+  there; for other project types the script is absent and the command reports "tests
+  not configured" rather than failing — add your own `scripts/run_tests.sh` to enable
+  the suite.
 
 ## Using it for a new project
 
@@ -59,8 +63,8 @@ autocomplete).
 3. `setup.sh` will:
    - Create `.claude/commands/`, `docs/wiki/`, and `scripts/` if missing.
    - Copy the generic commands plus any project-type commands into `.claude/commands/`.
-   - Copy the project-type `templates/` into your project root (never overwriting
-     existing files).
+   - Copy the generic `templates/` plus any project-type `templates/` into your project
+     root, preserving structure (never overwriting existing files).
    - Assemble a starter `CLAUDE.md` from the snippets (only if one does not already
      exist), ending with a `## Project` section for you to fill in.
    - Assemble `INTERVIEW.md` from `interviews/base.md` plus the matching overlay.

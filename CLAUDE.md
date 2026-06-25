@@ -29,7 +29,8 @@ bash -n setup.sh && bash -n check-updates.sh
 
 ## Editing gotchas
 
-- **Snippet concatenation order is hard-coded.** Generic snippets are listed explicitly (`wiki-contract.md`, then `git-workflow.md`) in `setup.sh` (~line 129), not globbed — adding or renaming a generic snippet means updating that array. Asset-type snippets after them are sorted alphabetically.
+- **Snippet concatenation order is hard-coded.** Generic snippets are listed explicitly (`wiki-contract.md`, `git-workflow.md`, then `bash-conventions.md`) in `setup.sh` (~line 129), not globbed — adding or renaming a generic snippet means updating that array. Asset-type snippets after them are sorted alphabetically.
+- **Templates compose generic + asset.** `setup.sh` copies `generic/templates/` into every project and then the project-type's `templates/` on top (via `copy_templates_from`); `check-updates.sh`'s `enumerate_candidates` mirrors the same two-tier walk. Keep the two in sync — a template only reachable by one of them will show as perpetual drift or never install. `cp` preserves mode, so shell scripts checked in at 0755 arrive executable.
 - **Adding a project type is a contract change in `lib/common.sh`:** add it to the `PROJECT_TYPES` array *and* map it to its asset folder in `asset_dir_for`. Then create that asset directory (e.g. `commands/`, `claude-snippets/`, `templates/`).
 
 ## Environment

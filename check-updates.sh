@@ -49,7 +49,7 @@ $PULL && pull_shared_repo "$SHARED_REPO"
 # enumerate_candidates <project-type> — print "category src-rel dest-rel" for every
 # file the shared repo would install for this type.
 enumerate_candidates() {
-  local type="$1" asset f
+  local type="$1" asset f tdir
   asset="$(asset_dir_for "$type")"
   shopt -s nullglob
   for f in "$SHARED_REPO/generic/commands"/*.md; do
@@ -67,11 +67,17 @@ enumerate_candidates() {
     done
   fi
   shopt -u nullglob
-  if [[ -d "$SHARED_REPO/$asset/templates" ]]; then
+  # Templates compose like commands: generic templates ship to every project, then
+  # the asset type's templates layer on top (omitted for a generic project so the
+  # same tree is not listed twice).
+  local tdirs=("generic/templates")
+  [[ "$asset" != "generic" ]] && tdirs+=("$asset/templates")
+  for tdir in "${tdirs[@]}"; do
+    [[ -d "$SHARED_REPO/$tdir" ]] || continue
     while IFS= read -r f; do
-      echo "template ${f#"$SHARED_REPO"/} ${f#"$SHARED_REPO"/"$asset"/templates/}"
-    done < <(find "$SHARED_REPO/$asset/templates" -type f ! -name .DS_Store)
-  fi
+      echo "template ${f#"$SHARED_REPO"/} ${f#"$SHARED_REPO"/"$tdir"/}"
+    done < <(find "$SHARED_REPO/$tdir" -type f ! -name .DS_Store)
+  done
 }
 
 # Report buckets (display strings).
@@ -272,7 +278,7 @@ if $APPLY && [[ ${#ap_src[@]} -gt 0 ]]; then
         m_cat+=("${ap_cat[$i]}"); m_hash+=("$newhash")
         m_src+=("${ap_src[$i]}"); m_dest+=("${ap_destabs[$i]#$PROJECT_ROOT/}")
       else
-        m_hash[$idx]="$newhash"
+        m_hash[idx]="$newhash"
       fi
     fi
   done
