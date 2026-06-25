@@ -11,36 +11,12 @@
 
 set -euo pipefail
 
-# --- Supported project types ----------------------------------------------------
-# Each project type maps to an asset directory inside the shared repo. The asset
-# directory holds commands/, claude-snippets/, and (optionally) templates/.
-PROJECT_TYPES=("generic" "godot-game")
-
-asset_dir_for() {
-  case "$1" in
-    generic)    echo "generic" ;;
-    godot-game) echo "godot" ;;
-    *)          echo "" ;;
-  esac
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
 
 # --- Resolve the shared repo ----------------------------------------------------
-SHARED_REPO="${CLAUDE_SHARED_REPO:-$HOME/.claude-shared}"
-
-if [[ ! -d "$SHARED_REPO" ]]; then
-  cat >&2 <<EOF
-ERROR: shared commands repo not found at: $SHARED_REPO
-
-Set CLAUDE_SHARED_REPO to the location of this repo, e.g.:
-
-    export CLAUDE_SHARED_REPO=/path/to/ClaudeTemplating
-
-or clone/symlink it to the default location:
-
-    git clone <repo-url> ~/.claude-shared
-EOF
-  exit 1
-fi
+SHARED_REPO="$(resolve_shared_repo)" || exit 1
 
 # --- Choose the project type ----------------------------------------------------
 PROJECT_TYPE="${1:-}"
@@ -65,6 +41,7 @@ fi
 GENERIC_DIR="$SHARED_REPO/generic"
 ASSET_DIR="$SHARED_REPO/$ASSET_DIR_NAME"
 PROJECT_ROOT="$(pwd)"
+MANIFEST="$PROJECT_ROOT/.claude/.template-manifest"
 
 echo "Project type: $PROJECT_TYPE  (assets: $ASSET_DIR_NAME)"
 echo "Shared repo:  $SHARED_REPO"
@@ -72,17 +49,20 @@ echo "Target:       $PROJECT_ROOT"
 echo
 
 # --- Pull the latest shared repo ------------------------------------------------
-if [[ -d "$SHARED_REPO/.git" ]]; then
-  echo "Pulling latest from shared repo..."
-  git -C "$SHARED_REPO" pull --ff-only || \
-    echo "WARNING: could not pull shared repo (continuing with local copy)." >&2
-  echo
-fi
+pull_shared_repo "$SHARED_REPO"
 
 # --- Create target directories --------------------------------------------------
 mkdir -p "$PROJECT_ROOT/.claude/commands"
 mkdir -p "$PROJECT_ROOT/docs/wiki"
 mkdir -p "$PROJECT_ROOT/scripts"
+
+# Manifest lines accumulated as files are installed:
+#   <category> <source-sha256> <source-rel-path> <dest-rel-path>
+manifest_lines=()
+record() {
+  local category="$1" src="$2" dest_rel="$3"
+  manifest_lines+=("$category $(file_hash "$src") ${src#$SHARED_REPO/} $dest_rel")
+}
 
 # --- Copy command files ---------------------------------------------------------
 copied_commands=()
@@ -94,6 +74,7 @@ copy_commands_from() {
     for f in "$dir/commands"/*.md; do
       cp "$f" "$PROJECT_ROOT/.claude/commands/"
       copied_commands+=("$(basename "$f")")
+      record command "$f" ".claude/commands/$(basename "$f")"
     done
     shopt -u nullglob
   fi
@@ -107,30 +88,38 @@ fi
 # --- Copy templates (preserve structure, do not overwrite) ----------------------
 copied_templates=false
 if [[ -d "$ASSET_DIR/templates" ]]; then
-  # -n: never overwrite existing files in the project.
-  cp -Rn "$ASSET_DIR/templates/." "$PROJECT_ROOT/" 2>/dev/null || true
   copied_templates=true
+  while IFS= read -r tf; do
+    rel="${tf#$ASSET_DIR/templates/}"
+    dest="$PROJECT_ROOT/$rel"
+    mkdir -p "$(dirname "$dest")"
+    [[ -e "$dest" ]] || cp "$tf" "$dest"   # never overwrite an existing file
+    # Record the source regardless of whether we skipped a pre-existing file —
+    # the checker compares against the project copy and flags local edits.
+    record template "$tf" "$rel"
+  done < <(find "$ASSET_DIR/templates" -type f ! -name .DS_Store)
 fi
 
 # --- Assemble CLAUDE.md ---------------------------------------------------------
+# Snippet sources, in concatenation order. Recorded in the manifest only when we
+# actually assemble CLAUDE.md (so the checker doesn't claim a hand-written
+# CLAUDE.md is in sync with these snippets).
+snippet_files=("$GENERIC_DIR/claude-snippets/wiki-contract.md" "$GENERIC_DIR/claude-snippets/git-workflow.md")
+if [[ "$ASSET_DIR_NAME" != "generic" && -d "$ASSET_DIR/claude-snippets" ]]; then
+  while IFS= read -r f; do
+    snippet_files+=("$f")
+  done < <(printf '%s\n' "$ASSET_DIR/claude-snippets"/*.md | sort)
+fi
+
 claude_created=false
 if [[ -f "$PROJECT_ROOT/CLAUDE.md" ]]; then
   echo "CLAUDE.md already exists — leaving it untouched."
 else
   {
-    cat "$GENERIC_DIR/claude-snippets/wiki-contract.md"
-    echo
-    cat "$GENERIC_DIR/claude-snippets/git-workflow.md"
-    echo
-
-    if [[ "$ASSET_DIR_NAME" != "generic" && -d "$ASSET_DIR/claude-snippets" ]]; then
-      shopt -s nullglob
-      for f in $(printf '%s\n' "$ASSET_DIR/claude-snippets"/*.md | sort); do
-        cat "$f"
-        echo
-      done
-      shopt -u nullglob
-    fi
+    for f in "${snippet_files[@]}"; do
+      cat "$f"
+      echo
+    done
 
     cat <<'EOF'
 ## Project
@@ -155,6 +144,10 @@ TODO
 EOF
   } > "$PROJECT_ROOT/CLAUDE.md"
   claude_created=true
+
+  for f in "${snippet_files[@]}"; do
+    record snippet "$f" "CLAUDE.md"
+  done
 fi
 
 # --- Assemble INTERVIEW.md ------------------------------------------------------
@@ -167,6 +160,16 @@ fi
     cat "$overlay"
   fi
 } > "$PROJECT_ROOT/INTERVIEW.md"
+
+# --- Write the install manifest -------------------------------------------------
+{
+  echo "# ClaudeTemplating install manifest — managed by setup.sh; do not edit"
+  echo "type=$PROJECT_TYPE"
+  echo "generated=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo
+  echo "# <category> <source-sha256> <source-rel-path> <dest-rel-path>"
+  printf '%s\n' "${manifest_lines[@]}"
+} > "$MANIFEST"
 
 # --- Summary --------------------------------------------------------------------
 echo
@@ -182,7 +185,9 @@ if [[ "$claude_created" == true ]]; then
   echo "CLAUDE.md assembled (fill in the ## Project section)."
 fi
 echo "INTERVIEW.md assembled."
+echo "Manifest written to .claude/.template-manifest."
 echo
 echo "Next steps:"
 echo "  1. Run INTERVIEW.md in a fresh Claude Code session to complete project setup."
 echo "  2. Review and commit the assembled files to your project repo."
+echo "  3. Later, run check-updates.sh from this project to pull in shared changes."

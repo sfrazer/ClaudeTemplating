@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# common.sh — shared helpers for setup.sh and check-updates.sh.
+# Source this file; do not execute it directly.
+
+# Supported project types and their asset directory inside the shared repo.
+# shellcheck disable=SC2034  # consumed by scripts that source this file
+PROJECT_TYPES=("generic" "godot-game")
+
+# asset_dir_for <project-type> — echo the asset folder for a project type, or
+# empty string if the type is unknown.
+asset_dir_for() {
+  case "$1" in
+    generic)    echo "generic" ;;
+    godot-game) echo "godot" ;;
+    *)          echo "" ;;
+  esac
+}
+
+# resolve_shared_repo — echo the shared repo path, or return 1 with guidance if it
+# cannot be found. Honours CLAUDE_SHARED_REPO, defaulting to ~/.claude-shared.
+# Call as: SHARED_REPO="$(resolve_shared_repo)" || exit 1
+resolve_shared_repo() {
+  local repo="${CLAUDE_SHARED_REPO:-$HOME/.claude-shared}"
+  if [[ ! -d "$repo" ]]; then
+    cat >&2 <<EOF
+ERROR: shared commands repo not found at: $repo
+
+Set CLAUDE_SHARED_REPO to the location of this repo, e.g.:
+
+    export CLAUDE_SHARED_REPO=/path/to/ClaudeTemplating
+
+or clone/symlink it to the default location:
+
+    git clone <repo-url> ~/.claude-shared
+EOF
+    return 1
+  fi
+  echo "$repo"
+}
+
+# pull_shared_repo <repo> — best-effort fast-forward pull of the shared repo.
+# Never fails the caller; warns and continues on error.
+pull_shared_repo() {
+  local repo="$1"
+  if [[ -d "$repo/.git" ]]; then
+    echo "Pulling latest from shared repo..."
+    git -C "$repo" pull --ff-only || \
+      echo "WARNING: could not pull shared repo (continuing with local copy)." >&2
+    echo
+  fi
+}
+
+# file_hash <path> — echo the sha256 of a file, or empty string if missing.
+# Uses shasum (present on macOS; sha256sum is not).
+file_hash() {
+  local path="$1"
+  [[ -f "$path" ]] || return 0
+  shasum -a 256 "$path" | awk '{print $1}'
+}
