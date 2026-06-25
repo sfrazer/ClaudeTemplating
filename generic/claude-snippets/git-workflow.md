@@ -1,6 +1,4 @@
-# claude-git.md — Git Workflow Guidelines
-
----
+## Git Workflow
 
 ### Branch Strategy
 
@@ -10,8 +8,6 @@
 - Merge back to `main` via pull request with squash merge to keep history clean.
 - After merging, pull `main` locally before starting the next branch.
 
----
-
 ### Commit Timing
 
 Commit when:
@@ -20,8 +16,6 @@ Commit when:
 - End of a working session (work-in-progress commits on a branch are fine)
 
 Do not wait until a large feature is complete. Small, frequent commits on a branch are preferable to one large commit.
-
----
 
 ### What Not to Commit
 
@@ -35,8 +29,6 @@ The `.gitattributes` should route binary assets through Git LFS:
 
 Do not stage or commit files that match these exclusions. If in doubt, check `.gitignore` and `.gitattributes` at the repo root before staging.
 
----
-
 ### Pre-PR Checklist
 
 Before opening any pull request, run the following steps in order:
@@ -48,9 +40,6 @@ Before opening any pull request, run the following steps in order:
 5. Address any findings from the review, or document why a finding is incorrect.
 6. Only open the PR once all steps pass cleanly.
 
----
-
 ### Godot-Specific Note
 
 When adding Git to an existing Godot project, Version Control Metadata must be initialized via `Project → Version Control → Create/Override Version Control Metadata` with Git selected. This only needs to be done once.
-
