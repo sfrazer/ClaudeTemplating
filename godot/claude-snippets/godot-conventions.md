@@ -168,7 +168,7 @@ The project must be imported before the first headless run. Import once with:
 godot --headless --import
 ```
 
-A script to run all tests shoud be placed in /scripts/run_tests.sh and can be called in the future with the /run-tests claude command. That script should contain:
+A script to run all tests should be placed in scripts/run_tests.sh and can be called in the future with the /run-tests claude command. That script should contain:
 
 
 ```sh
