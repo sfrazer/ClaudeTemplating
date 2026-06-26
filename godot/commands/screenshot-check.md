@@ -5,6 +5,10 @@ argument-hint: "[res://path/to/scene.tscn] [output.png]"
 
 Run the Godot screenshot tool and analyse the output for errors.
 
+Run the helper bare — just the path and its arguments. Do not pipe, redirect, or chain
+it with other commands (e.g. an `--import` step or `grep`); a compound line cannot be
+statically analyzed and will prompt. Run any other steps as their own bare commands.
+
 1. Run the screenshot helper script:
 
 `source/debug/tests/godot_screenshot.sh`
