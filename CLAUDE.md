@@ -14,23 +14,35 @@ Two scripts do the work:
 
 ## Bash conventions
 
+**Authoring the scripts:**
 - All scripts use `set -euo pipefail` and must be fully `shellcheck`-clean.
 - Private helpers are prefixed with `_`.
 - `shasum -a 256` is used for hashes (macOS has no `sha256sum`) — keep it.
 
+**Running commands (keep them auto-approvable):** Invoke the test harness, the gate
+commands, and one-off checks as plain, standalone commands — one per call. Do not chain
+them with `&&`/`;`, pipe them into `grep`/`head`/`tail`, add `>`/`2>&1` redirection, or
+wrap them in `$(...)`. A compound line cannot be statically analyzed by the permission
+system and forces a manual approval, whereas separate bare commands stay auto-approvable.
+`./tests/run.sh` already prints a summary and returns non-zero on failure, so there is no
+need to filter its output. Prefer the simplest command that does the job; reach for a
+pipeline only when a task genuinely needs one (and expect to approve it). This is the
+same rule the generated projects get via the Bash Conventions snippet — we follow it here
+too.
+
 ## Before committing changes to setup.sh / check-updates.sh / lib/common.sh
 
-Run all of these:
+Run each of these as its own command (don't chain or pipe them — see Bash conventions):
 ```
-shellcheck setup.sh check-updates.sh lib/common.sh
-bash -n setup.sh && bash -n check-updates.sh
+shellcheck setup.sh check-updates.sh lib/common.sh tests/*.sh
+bash -n setup.sh
+bash -n check-updates.sh
 ./tests/run.sh      # the test harness — assembly, drift detection, settings.json, common.sh
 ```
 The harness builds a `.git`-less copy of the asset trees in a temp dir and runs the
 real scripts against it, so it is offline and side-effect free. Add a `test_*` function
-to the matching `tests/test_*.sh` (or shellcheck the harness with
-`shellcheck tests/*.sh`) when you change behaviour. `./tests/run.sh <name>` runs just
-`tests/test_<name>.sh`.
+to the matching `tests/test_*.sh` when you change behaviour. `./tests/run.sh <name>` runs
+just `tests/test_<name>.sh`.
 
 ## Editing gotchas
 
