@@ -20,12 +20,17 @@ Two scripts do the work:
 
 ## Before committing changes to setup.sh / check-updates.sh / lib/common.sh
 
-Run all three:
+Run all of these:
 ```
 shellcheck setup.sh check-updates.sh lib/common.sh
 bash -n setup.sh && bash -n check-updates.sh
-./setup.sh generic   # dry run against a scratch dir to confirm assembly still works
+./tests/run.sh      # the test harness — assembly, drift detection, settings.json, common.sh
 ```
+The harness builds a `.git`-less copy of the asset trees in a temp dir and runs the
+real scripts against it, so it is offline and side-effect free. Add a `test_*` function
+to the matching `tests/test_*.sh` (or shellcheck the harness with
+`shellcheck tests/*.sh`) when you change behaviour. `./tests/run.sh <name>` runs just
+`tests/test_<name>.sh`.
 
 ## Editing gotchas
 

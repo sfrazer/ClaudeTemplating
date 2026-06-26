@@ -129,6 +129,7 @@ fi
 # executable (e.g. scripts/*.sh at 0755) arrive executable.
 copied_templates=false
 templates_skipped=0
+provided_scripts=()   # rel-paths of installed *.sh — used to assemble settings.json
 copy_templates_from() {
   local base="$1" tf rel dest
   [[ -d "$base" ]] || return 0
@@ -142,6 +143,10 @@ copy_templates_from() {
     else
       cp "$tf" "$dest"
     fi
+    # A shipped shell script is meant to be run bare; collect it so settings.json
+    # can auto-approve it. (Recorded even if the copy was skipped — the path, and
+    # therefore the permission rule, is the same.)
+    [[ "$rel" == *.sh ]] && provided_scripts+=("$rel")
     # Record the source regardless of whether we skipped a pre-existing file —
     # the checker compares against the project copy and flags local edits.
     record template "$tf" "$rel"
@@ -151,6 +156,51 @@ copy_templates_from() {
 copy_templates_from "$GENERIC_DIR/templates"
 if [[ "$ASSET_DIR_NAME" != "generic" ]]; then
   copy_templates_from "$ASSET_DIR/templates"
+fi
+
+# --- Assemble .claude/settings.json ---------------------------------------------
+# Emit permission allow-rules so the provided scripts auto-approve when run bare
+# (the Bash Conventions snippet tells Claude to invoke them that way). For each
+# script we allow four literal forms: an exact rule (the bare, no-argument command,
+# which a trailing wildcard does NOT reliably match) and a `<cmd> *` wildcard (for
+# trailing args), each for both the plain and ./-prefixed path (Bash rules match the
+# literal string Claude sends, so those differ). The space-wildcard form is the one
+# Claude Code itself writes on "allow and remember". An env-var prefix such as
+# `CODE_REVIEW_MODEL=x scripts/code_review.sh` is a different literal string and is
+# not covered — approve that once if you use it. Generated with plain bash (no jq);
+# left untouched if the project already has a settings.json so hand-written rules
+# are never clobbered.
+settings_state=none
+SETTINGS="$PROJECT_ROOT/.claude/settings.json"
+if [[ ${#provided_scripts[@]} -gt 0 ]]; then
+  if [[ -e "$SETTINGS" ]]; then
+    settings_state=preexisting
+  else
+    # Build the unique, sorted rule list. Per script: exact + ` *` wildcard, for
+    # both the plain and ./-prefixed path (four literal forms).
+    rules=()
+    sorted_rules=()
+    for s in "${provided_scripts[@]}"; do
+      rules+=("Bash($s)" "Bash($s *)" "Bash(./$s)" "Bash(./$s *)")
+    done
+    while IFS= read -r rule; do sorted_rules+=("$rule"); done \
+      < <(printf '%s\n' "${rules[@]}" | sort -u)
+    {
+      echo '{'
+      echo '  "permissions": {'
+      echo '    "allow": ['
+      n=${#sorted_rules[@]}
+      for i in "${!sorted_rules[@]}"; do
+        comma=','
+        [[ $i -eq $((n - 1)) ]] && comma=''
+        printf '      "%s"%s\n' "${sorted_rules[$i]}" "$comma"
+      done
+      echo '    ]'
+      echo '  }'
+      echo '}'
+    } > "$SETTINGS"
+    settings_state=assembled
+  fi
 fi
 
 # --- Assemble CLAUDE.md ---------------------------------------------------------
@@ -310,6 +360,11 @@ fi
 if [[ "$claude_created" == true ]]; then
   echo "CLAUDE.md assembled (fill in the ## Project section)."
 fi
+case "$settings_state" in
+  assembled)   echo ".claude/settings.json assembled (allow-rules for the provided scripts)." ;;
+  preexisting) echo ".claude/settings.json already exists — left untouched (add allow-rules for"
+               echo "  the provided scripts by hand if you want them auto-approved)." ;;
+esac
 echo "INTERVIEW.md assembled."
 echo "Manifest written to .claude/.template-manifest."
 if [[ -n "$repo_result" ]]; then

@@ -21,6 +21,7 @@ interviews/
   overlays/              # Per-project-type interview additions (e.g. godot-game.md)
 lib/
   common.sh              # Shared helpers sourced by both scripts
+tests/                   # Dependency-free bash test harness (./tests/run.sh)
 setup.sh                 # The assembler
 check-updates.sh         # Detect/apply shared-repo changes in an existing project
 ```
@@ -67,6 +68,9 @@ autocomplete).
      root, preserving structure (never overwriting existing files).
    - Assemble a starter `CLAUDE.md` from the snippets (only if one does not already
      exist), ending with a `## Project` section for you to fill in.
+   - Assemble `.claude/settings.json` (only if one does not already exist) with
+     permission allow-rules for the provided scripts, so Claude can run them bare
+     without a permission prompt (see the Bash Conventions snippet).
    - Assemble `INTERVIEW.md` from `interviews/base.md` plus the matching overlay.
    - Write `.claude/.template-manifest` recording the project type and the
      install-time hash of every file it placed (used by `check-updates.sh`).
