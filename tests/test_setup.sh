@@ -10,7 +10,7 @@ test_setup_generic_assembles_expected_files() {
   assert_file "$p/INTERVIEW.md"
   assert_file "$p/.claude/.template-manifest"
   # The bash-conventions contract is concatenated into CLAUDE.md.
-  assert_contains "$p/CLAUDE.md" "Run provided scripts bare"
+  assert_contains "$p/CLAUDE.md" "Prefer the simplest, standalone command"
   # The code-review command points at the wrapper, not an inline brace expansion.
   assert_contains "$p/.claude/commands/code-review.md" "scripts/code_review.sh"
 }
