@@ -134,3 +134,34 @@ Notes:
   content comparison (which cannot distinguish a local edit from an upstream update).
   Pass `--type <project-type>`, or just re-run `setup.sh <project-type>` once to
   generate a manifest for precise checks going forward.
+
+## Changelog
+
+Newest first; each entry links to its pull request.
+
+### 2026-06-26
+
+- **Auto-approve `settings.json` + a test harness**
+  ([#8](https://github.com/sfrazer/ClaudeTemplating/pull/8)) — `setup.sh` assembles a
+  starter `.claude/settings.json` with permission allow-rules for the provided scripts
+  (so Claude runs them bare without a prompt), and a dependency-free bash test harness
+  lands under `tests/` (`./tests/run.sh`) covering assembly, drift detection,
+  settings.json generation, and `lib/common.sh`. The Bash Conventions snippet is
+  generalized to "prefer the simplest, standalone command."
+- **Contract to run provided scripts bare**
+  ([#7](https://github.com/sfrazer/ClaudeTemplating/pull/7)) — adds a Bash Conventions
+  rule (and reinforces the `/run-tests` and `/screenshot-check` commands) telling Claude
+  to invoke provided scripts as their own command; compound shell lines can't be
+  statically analyzed and force a permission prompt.
+
+### 2026-06-25
+
+- **Bake auto-approvable tooling into the template**
+  ([#6](https://github.com/sfrazer/ClaudeTemplating/pull/6)) — `setup.sh` can create a
+  GitHub remote (on by default; `--no-repo`/`--public`; never touches an existing repo);
+  ships `scripts/code_review.sh` (generic) and a fuller `scripts/run_tests.sh` (godot) as
+  templates with `/code-review` pointing at the wrapper; templates now compose
+  generic + asset.
+- **Initial scaffold, `check-updates.sh`, and hardening fixes**
+  ([#1](https://github.com/sfrazer/ClaudeTemplating/pull/1)–[#5](https://github.com/sfrazer/ClaudeTemplating/pull/5))
+  — the assembler, the update checker, and early code-review/robustness fixes.
