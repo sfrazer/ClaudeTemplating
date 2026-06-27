@@ -18,6 +18,13 @@
 #                          this rather than a shell alias — aliases are not visible
 #                          to non-interactive scripts.
 #   SCREENSHOT_WAIT_FRAMES Frames to wait before capture (read by the helper).
+#   SCREENSHOT_SETUP       Optional res:// path to a GDScript with a `setup(scene)`
+#                          method (may be a coroutine), run after the wait and before
+#                          capture to drive the scene into a non-default state —
+#                          select something, simulate input, load data. Lets you
+#                          photograph states that only exist after interaction (e.g.
+#                          selection handles). The helper reads it from the inherited
+#                          environment; pass it inline: SCREENSHOT_SETUP=res://... <this>
 #
 # Exits non-zero if Godot exits non-zero, writes no log, or logs an error line.
 
