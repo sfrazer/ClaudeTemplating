@@ -139,6 +139,15 @@ Notes:
 
 Newest first; each entry links to its pull request.
 
+### 2026-06-27
+
+- **`SCREENSHOT_SETUP` hook for the godot screenshot helper**
+  ([#10](https://github.com/sfrazer/ClaudeTemplating/pull/10)) — the screenshot helper
+  can now run an optional `setup(scene)` hook (a `res://` GDScript, coroutine-aware) to
+  drive a scene into a non-default state — selection handles, drag/hover, a loaded view —
+  before capturing, instead of only the default first-frame state. Behaviour-preserving
+  when unset; a misconfigured hook fails fast.
+
 ### 2026-06-26
 
 - **Auto-approve `settings.json` + a test harness**

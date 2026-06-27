@@ -57,3 +57,5 @@ just `tests/test_<name>.sh`.
 ## Git conventions
 
 Branch names are descriptive kebab-case. Commit messages are prefixed `feat:` / `fix:` / `chore:`. Squash-merge to `main`; never commit directly to `main`.
+
+Every user-facing change adds its entry to the **Changelog** in `README.md` *in the same PR* (newest first, under a dated `###` heading, linked to the PR). Don't leave it for a follow-up — the changelog should never lag `main`. Pure-internal changes (refactors, test-only) can be skipped.
