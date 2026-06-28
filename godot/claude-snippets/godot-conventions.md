@@ -84,6 +84,10 @@ Multiplying a node's X scale by -1 propagates to all children including Area2Ds,
 Enemies placed in the level process continuously regardless of player proximity.
 - **Do:** Use a spawner with `VisibleOnScreenNotifier2D` so enemies only exist when relevant.
 
+#### Buttons can get stuck "pressed" after a drag
+If a `BaseButton` (`TextureButton`, etc.) begins a drag on `button_down` and the drag's mouse-release is consumed elsewhere — e.g. a higher-priority `_input` handler calling `set_input_as_handled()` before the GUI sees it — the button never receives its `button_up` and Godot leaves it internally pressed. The next click on that button is swallowed (it just clears the stuck press); a *different* button working fine is the diagnostic tell.
+- **Fix:** After the drag starts, clear the press state by toggling `disabled` true→false, deferred — so it runs after the current input frame and never renders disabled.
+
 ### Spawner System
 
 Each spawner is a `Marker2D` with a `VisibleOnScreenNotifier2D` and a `Timer`.
@@ -189,6 +193,7 @@ godot --headless -s res://addons/gut/gut_cmdln.gd
 - **`push_error` in tests causes failure.** GUT treats any `push_error` call during a test frame as an unexpected error, failing the test even if all assertions pass. Do not write tests that exercise code paths that call `push_error`.
 - **JSON type mismatch on deserialize.** `JSON.parse_string()` returns an untyped `Array`; you cannot assign it directly to `Array[Dictionary]`. Iterate and append each element explicitly instead of using `.duplicate()`.
 - **Empty string passed to `JSON.parse_string()`** triggers an engine-level error that GUT flags as unexpected. Guard with `if json_string.is_empty(): return false` before calling the parser.
+- **Headless GUT can't simulate GUI mouse interaction.** Pushing synthetic InputEventMouseButtons via Viewport.push_input() does not drive Control mouse-picking in a headless run — the press never reaches the button, so any test that "clicks" a Control by position silently does nothing (it'll read as zero presses, not a failure). Godot's internal button press/capture state (status.press_attempt, viewport gui.mouse_focus) is also not settable from script. So bugs in real GUI capture/press routing can't be reproduced in unit tests — verify those in-app, and have tests guard the wiring and logic instead (signals emitted, state-clearing helpers behave, mode locks respected).
 
 ### Visual Verification (Screenshot)
 
