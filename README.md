@@ -139,6 +139,15 @@ Notes:
 
 Newest first; each entry links to its pull request.
 
+### 2026-06-28
+
+- **Godot conventions: input gotchas**
+  ([#12](https://github.com/sfrazer/ClaudeTemplating/pull/12)) — add two real-world
+  Godot notes to the godot-conventions snippet: buttons can get stuck "pressed" when a
+  drag's mouse-release is consumed elsewhere (with the deferred `disabled` toggle fix),
+  and headless GUT can't simulate GUI mouse interaction (so verify real capture/press
+  routing in-app, not in unit tests).
+
 ### 2026-06-27
 
 - **`SCREENSHOT_SETUP` hook for the godot screenshot helper**
