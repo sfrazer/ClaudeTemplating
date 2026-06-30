@@ -4,16 +4,24 @@
 test_common_asset_dir_mapping() {
   # shellcheck source=/dev/null
   source "$COMMON"
-  assert_eq "$(asset_dir_for generic)"    "generic" "generic maps to generic"
-  assert_eq "$(asset_dir_for godot-game)" "godot"   "godot-game maps to godot"
-  assert_eq "$(asset_dir_for nonsense)"   ""        "unknown type maps to empty"
+  assert_eq "$(asset_dir_for generic)"  "generic" "generic maps to generic"
+  assert_eq "$(asset_dir_for godot)"    "godot"   "godot maps to godot"
+  assert_eq "$(asset_dir_for nonsense)" ""        "unknown type maps to empty"
+}
+
+test_common_overlay_mapping() {
+  # shellcheck source=/dev/null
+  source "$COMMON"
+  assert_eq "$(overlay_for godot)"    "game" "godot uses the game overlay"
+  assert_eq "$(overlay_for generic)"  ""     "generic has no overlay"
+  assert_eq "$(overlay_for nonsense)" ""     "unknown type has no overlay"
 }
 
 test_common_project_types_contract() {
   # shellcheck source=/dev/null
   source "$COMMON"
   assert_match " ${PROJECT_TYPES[*]} " " generic "
-  assert_match " ${PROJECT_TYPES[*]} " " godot-game "
+  assert_match " ${PROJECT_TYPES[*]} " " godot "
 }
 
 test_common_file_hash_matches_shasum() {

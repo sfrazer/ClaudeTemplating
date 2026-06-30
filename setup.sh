@@ -4,7 +4,7 @@
 #
 # Usage:
 #   ./setup.sh                 # interactive menu
-#   ./setup.sh godot-game      # skip the menu
+#   ./setup.sh godot           # skip the menu
 #
 # By default, setup also creates a private GitHub repository for the project
 # (via the GitHub CLI, gh) and wires it up as the 'origin' remote. It never
@@ -16,7 +16,7 @@
 # The shared commands repo (the repo this script lives in) is located via the
 # CLAUDE_SHARED_REPO environment variable, defaulting to ~/.claude-shared.
 #
-# Supported project types: generic, godot-game.
+# Supported project types: generic, godot.
 
 set -euo pipefail
 
@@ -51,7 +51,7 @@ PROJECT_TYPE="${positional[0]:-}"
 if [[ -z "$PROJECT_TYPE" ]]; then
   if [[ ! -t 0 ]]; then
     echo "ERROR: no project type given and not running interactively." >&2
-    echo "       Pass one as an argument, e.g. setup.sh godot-game" >&2
+    echo "       Pass one as an argument, e.g. setup.sh godot" >&2
     echo "       Supported: ${PROJECT_TYPES[*]}" >&2
     exit 1
   fi
@@ -267,11 +267,14 @@ done
 # --- Assemble INTERVIEW.md ------------------------------------------------------
 {
   cat "$SHARED_REPO/interviews/base.md"
-  overlay="$SHARED_REPO/interviews/overlays/$PROJECT_TYPE.md"
-  if [[ -f "$overlay" ]]; then
-    echo
-    echo
-    cat "$overlay"
+  overlay_name="$(overlay_for "$PROJECT_TYPE")"
+  if [[ -n "$overlay_name" ]]; then
+    overlay="$SHARED_REPO/interviews/overlays/$overlay_name.md"
+    if [[ -f "$overlay" ]]; then
+      echo
+      echo
+      cat "$overlay"
+    fi
   fi
 } > "$PROJECT_ROOT/INTERVIEW.md"
 

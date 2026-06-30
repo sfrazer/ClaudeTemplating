@@ -48,7 +48,8 @@ just `tests/test_<name>.sh`.
 
 - **Snippet concatenation order is hard-coded.** Generic snippets are listed explicitly (`wiki-contract.md`, `git-workflow.md`, then `bash-conventions.md`) in `setup.sh` (~line 129), not globbed — adding or renaming a generic snippet means updating that array. Asset-type snippets after them are sorted alphabetically.
 - **Templates compose generic + asset.** `setup.sh` copies `generic/templates/` into every project and then the project-type's `templates/` on top (via `copy_templates_from`); `check-updates.sh`'s `enumerate_candidates` mirrors the same two-tier walk. Keep the two in sync — a template only reachable by one of them will show as perpetual drift or never install. `cp` preserves mode, so shell scripts checked in at 0755 arrive executable.
-- **Adding a project type is a contract change in `lib/common.sh`:** add it to the `PROJECT_TYPES` array *and* map it to its asset folder in `asset_dir_for`. Then create that asset directory (e.g. `commands/`, `claude-snippets/`, `templates/`).
+- **Adding a project type is a contract change in `lib/common.sh`:** add it to the `PROJECT_TYPES` array, map it to its asset folder in `asset_dir_for`, and (if it has an interview overlay) map it to that overlay's basename in `overlay_for`. Then create that asset directory (e.g. `commands/`, `claude-snippets/`, `templates/`).
+- **Interview overlays are keyed by overlay name, not project type.** `setup.sh` resolves the overlay via `overlay_for "$PROJECT_TYPE"`, so several types can share one file — game types (`godot`, future `love2d`) all map to `interviews/overlays/game.md`. A type with no `overlay_for` case gets no overlay.
 
 ## Environment
 

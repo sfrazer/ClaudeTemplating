@@ -1,6 +1,7 @@
-## Overlay: Godot game
+## Overlay: Game
 
-Apply these additions during the interview when the project type is a Godot game.
+Apply these additions during the interview when the project type is a game
+(Godot, Love2D, etc.).
 
 ### Area 1 additions
 - What kind of game — genre, tone, core loop?

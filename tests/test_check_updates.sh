@@ -13,14 +13,14 @@ test_check_clean_after_setup_generic() {
 
 test_check_clean_after_setup_godot() {
   local p; p="$(make_project)"
-  do_setup "$p" godot-game --no-repo >/dev/null 2>&1 || fail "setup exited $?"
+  do_setup "$p" godot --no-repo >/dev/null 2>&1 || fail "setup exited $?"
   local out; out="$(do_check "$p" --no-pull)" || fail "check exited $?"
   assert_match "$out" "Up to date"
 }
 
 test_check_reports_and_reinstalls_missing() {
   local p; p="$(make_project)"
-  do_setup "$p" godot-game --no-repo >/dev/null 2>&1 || fail "setup exited $?"
+  do_setup "$p" godot --no-repo >/dev/null 2>&1 || fail "setup exited $?"
   rm -f "$p/scripts/run_tests.sh"
 
   local out rc=0
