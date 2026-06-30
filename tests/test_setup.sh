@@ -18,7 +18,7 @@ test_setup_generic_assembles_expected_files() {
 test_setup_ships_generic_script_to_every_type() {
   # The /code-review wrapper is a generic template; it must reach a godot project too.
   local p; p="$(make_project)"
-  do_setup "$p" godot-game --no-repo >/dev/null 2>&1 || fail "setup godot exited $?"
+  do_setup "$p" godot --no-repo >/dev/null 2>&1 || fail "setup godot exited $?"
   assert_exec "$p/scripts/code_review.sh"
   assert_exec "$p/scripts/run_tests.sh"
   assert_exec "$p/source/debug/tests/godot_screenshot.sh"
@@ -32,7 +32,7 @@ test_setup_scripts_are_executable() {
 
 test_setup_generates_settings_with_allow_rules() {
   local p; p="$(make_project)"
-  do_setup "$p" godot-game --no-repo >/dev/null 2>&1 || fail "setup exited $?"
+  do_setup "$p" godot --no-repo >/dev/null 2>&1 || fail "setup exited $?"
   assert_file "$p/.claude/settings.json"
   # Exact (bare) rules — the primary case, since the scripts are invoked bare.
   assert_grep "$p/.claude/settings.json" '"Bash\(scripts/code_review.sh\)"'
@@ -67,10 +67,21 @@ test_setup_preserves_existing_claude_md() {
 
 test_setup_manifest_records_templates_and_snippets() {
   local p; p="$(make_project)"
-  do_setup "$p" godot-game --no-repo >/dev/null 2>&1 || fail "setup exited $?"
+  do_setup "$p" godot --no-repo >/dev/null 2>&1 || fail "setup exited $?"
   assert_contains "$p/.claude/.template-manifest" "generic/templates/scripts/code_review.sh"
   assert_contains "$p/.claude/.template-manifest" "godot/templates/scripts/run_tests.sh"
-  assert_contains "$p/.claude/.template-manifest" "type=godot-game"
+  assert_contains "$p/.claude/.template-manifest" "type=godot"
+}
+
+test_setup_game_overlay_shared_by_godot() {
+  # Game types pull in the shared "game" interview overlay; generic gets none.
+  local p; p="$(make_project)"
+  do_setup "$p" godot --no-repo >/dev/null 2>&1 || fail "setup godot exited $?"
+  assert_contains "$p/INTERVIEW.md" "## Overlay: Game"
+  local g; g="$(make_project)"
+  do_setup "$g" generic --no-repo >/dev/null 2>&1 || fail "setup generic exited $?"
+  grep -q "## Overlay:" "$g/INTERVIEW.md" && fail "generic INTERVIEW.md should have no overlay"
+  return 0
 }
 
 test_setup_unknown_type_fails() {

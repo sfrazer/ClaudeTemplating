@@ -4,18 +4,30 @@
 
 # Supported project types and their asset directory inside the shared repo.
 # Part of the sourced contract: setup.sh and check-updates.sh both rely on
-# PROJECT_TYPES (menus/validation) and asset_dir_for (type -> folder mapping).
-# Any new script that sources this file gets the same supported-type set.
+# PROJECT_TYPES (menus/validation), asset_dir_for (type -> folder mapping), and
+# overlay_for (type -> interview overlay). Any new script that sources this file
+# gets the same supported-type set.
 # shellcheck disable=SC2034  # consumed by scripts that source this file
-PROJECT_TYPES=("generic" "godot-game")
+PROJECT_TYPES=("generic" "godot")
 
 # asset_dir_for <project-type> — echo the asset folder for a project type, or
-# empty string if the type is unknown.
+# empty string if the type is unknown. (Type and folder happen to match today,
+# but the mapping is kept explicit so a type can diverge from its folder.)
 asset_dir_for() {
   case "$1" in
-    generic)    echo "generic" ;;
-    godot-game) echo "godot" ;;
-    *)          echo "" ;;
+    generic) echo "generic" ;;
+    godot)   echo "godot" ;;
+    *)       echo "" ;;
+  esac
+}
+
+# overlay_for <project-type> — echo the interview overlay basename (without the
+# .md extension) for a project type, or empty string if the type has no overlay.
+# Game types share a single "game" overlay; generic has none.
+overlay_for() {
+  case "$1" in
+    godot) echo "game" ;;
+    *)     echo "" ;;
   esac
 }
 

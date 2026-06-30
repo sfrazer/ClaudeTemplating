@@ -18,7 +18,7 @@ godot/                   # Godot-game assets
   templates/             # Files copied into the project tree (preserving structure)
 interviews/
   base.md                # The core requirements interview
-  overlays/              # Per-project-type interview additions (e.g. godot-game.md)
+  overlays/              # Interview additions by overlay name (e.g. game.md, shared by game types)
 lib/
   common.sh              # Shared helpers sourced by both scripts
 tests/                   # Dependency-free bash test harness (./tests/run.sh)
@@ -56,10 +56,10 @@ autocomplete).
 
    ```bash
    "$CLAUDE_SHARED_REPO/setup.sh"            # interactive menu
-   "$CLAUDE_SHARED_REPO/setup.sh" godot-game # skip the menu
+   "$CLAUDE_SHARED_REPO/setup.sh" godot      # skip the menu
    ```
 
-   Supported project types: `generic`, `godot-game`.
+   Supported project types: `generic`, `godot`.
 
 3. `setup.sh` will:
    - Create `.claude/commands/`, `docs/wiki/`, and `scripts/` if missing.
@@ -100,11 +100,15 @@ git clone <repo-url> ~/.claude-shared
    - `claude-snippets/*.md` — concatenated into `CLAUDE.md` (alphabetical order).
    - `commands/*.md` — slash commands copied into `.claude/commands/`.
    - `templates/...` — files mirrored into the project root, preserving structure.
-2. Add an interview overlay at `interviews/overlays/<project-type>.md` (optional).
+2. Add an interview overlay under `interviews/overlays/` (optional). Overlays are keyed
+   by overlay name, not project type, so several types can share one — e.g. game types
+   share `game.md`.
 3. Register the type in `lib/common.sh` (shared by both scripts):
    - Add it to the `PROJECT_TYPES` array.
-   - Add a `case` entry in `asset_dir_for()` mapping the project type to its folder
-     (the project type and folder name can differ, e.g. `godot-game` → `godot`).
+   - Add a `case` entry in `asset_dir_for()` mapping the project type to its asset folder
+     (they usually match, but the mapping is kept explicit so a type can diverge).
+   - Add a `case` entry in `overlay_for()` if the type has an interview overlay (return
+     the overlay basename, e.g. `game`); omit it to get no overlay.
 
 ## Updating an existing project when shared files change
 
@@ -141,6 +145,13 @@ Newest first; each entry links to its pull request.
 
 ### 2026-06-30
 
+- **Rename `godot-game` → `godot`; share one game interview overlay**
+  ([#14](https://github.com/sfrazer/ClaudeTemplating/pull/14)) — the Godot project type
+  is now just `godot` (matching its asset folder), and the interview overlay moves to
+  `interviews/overlays/game.md`, resolved via a new `overlay_for` mapping in
+  `lib/common.sh` so multiple game types can share it. **Breaking:** projects whose
+  `.template-manifest` records `type=godot-game` should update it to `type=godot` (or
+  re-run `setup.sh godot`) for `check-updates.sh` to keep working.
 - **`code_review.sh` invokes `pi` directly**
   ([#13](https://github.com/sfrazer/ClaudeTemplating/pull/13)) — the generic code-review
   wrapper now pipes empty stdin into `pi --no-session` instead of `ollama launch pi`,
