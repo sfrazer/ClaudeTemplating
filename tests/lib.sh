@@ -23,7 +23,7 @@ make_project() { mktemp -d "$TEST_TMP/proj.XXXXXX"; }
 make_fixture() {
   local f; f="$(mktemp -d "$TEST_TMP/shared.XXXXXX")"
   local d
-  for d in generic godot interviews; do cp -R "$REPO_ROOT/$d" "$f/"; done
+  for d in generic godot love2d interviews; do cp -R "$REPO_ROOT/$d" "$f/"; done
   echo "$f"
 }
 

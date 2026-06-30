@@ -84,6 +84,20 @@ test_setup_game_overlay_shared_by_godot() {
   return 0
 }
 
+test_setup_love2d_assembles_expected_files() {
+  local p; p="$(make_project)"
+  do_setup "$p" love2d --no-repo >/dev/null 2>&1 || fail "setup love2d exited $?"
+  # Generic templates still ship; the love2d busted runner lands and is executable.
+  assert_exec "$p/scripts/code_review.sh"
+  assert_exec "$p/scripts/run_tests.sh"
+  # The love2d conventions snippet is concatenated into CLAUDE.md.
+  assert_contains "$p/CLAUDE.md" "Love2D / Lua Conventions"
+  # love2d is a game type, so it shares the game overlay.
+  assert_contains "$p/INTERVIEW.md" "## Overlay: Game"
+  assert_contains "$p/.claude/.template-manifest" "love2d/templates/scripts/run_tests.sh"
+  assert_contains "$p/.claude/.template-manifest" "type=love2d"
+}
+
 test_setup_unknown_type_fails() {
   local p; p="$(make_project)"
   assert_status 1 "unknown type" do_setup "$p" not-a-type --no-repo
