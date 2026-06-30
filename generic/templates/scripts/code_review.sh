@@ -15,4 +15,8 @@ set -euo pipefail
 MODEL="${CODE_REVIEW_MODEL:-glm-5.2:cloud}"
 PROMPT="${1:-review this code and return your findings}"
 
-exec ollama launch pi --model "$MODEL" -- -p "$PROMPT"
+# The `echo "" |` pipe is required: it closes stdin so `pi` runs non-interactively.
+# Without it, `pi` waits for terminal input and hangs forever when Claude invokes this
+# script (there is no TTY to type into). Do not remove it.
+#exec ollama launch pi --model "$MODEL" -- --no-session -p "$PROMPT"
+echo "" | pi --model "$MODEL" --no-session -p "$PROMPT"

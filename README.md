@@ -139,6 +139,14 @@ Notes:
 
 Newest first; each entry links to its pull request.
 
+### 2026-06-30
+
+- **`code_review.sh` invokes `pi` directly**
+  ([#13](https://github.com/sfrazer/ClaudeTemplating/pull/13)) — the generic code-review
+  wrapper now pipes empty stdin into `pi --no-session` instead of `ollama launch pi`,
+  keeping each review run stateless. Model defaulting and the auto-approvable bare-path
+  invocation are unchanged.
+
 ### 2026-06-28
 
 - **Godot conventions: input gotchas**
