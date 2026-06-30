@@ -21,7 +21,7 @@ trap 'rm -rf "$TEST_TMP"' EXIT
 SHARED_FIXTURE="$TEST_TMP/shared"
 export SHARED_FIXTURE
 mkdir -p "$SHARED_FIXTURE"
-for d in generic godot interviews; do
+for d in generic godot love2d interviews; do
   cp -R "$REPO_ROOT/$d" "$SHARED_FIXTURE/"
 done
 

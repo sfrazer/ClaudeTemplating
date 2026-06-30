@@ -16,6 +16,9 @@ godot/                   # Godot-game assets
   claude-snippets/       # Godot conventions snippet
   commands/              # Godot-specific slash commands
   templates/             # Files copied into the project tree (preserving structure)
+love2d/                  # Love2D/Lua game assets
+  claude-snippets/       # Love2D + Lua conventions snippet
+  templates/             # Files copied into the project tree (e.g. scripts/run_tests.sh)
 interviews/
   base.md                # The core requirements interview
   overlays/              # Interview additions by overlay name (e.g. game.md, shared by game types)
@@ -44,9 +47,10 @@ autocomplete).
   the `CODE_REVIEW_MODEL` environment variable. The script keeps the model-defaulting
   logic out of the invocation so the command stays auto-approvable.
 - **`/run-tests`** runs `scripts/run_tests.sh`. The Godot template ships a GUT runner
-  there; for other project types the script is absent and the command reports "tests
-  not configured" rather than failing — add your own `scripts/run_tests.sh` to enable
-  the suite.
+  there and the Love2D template a `busted` runner (resolved from `BUSTED_BIN` then
+  `PATH`; install with `luarocks install busted`); for other project types the script is
+  absent and the command reports "tests not configured" rather than failing — add your
+  own `scripts/run_tests.sh` to enable the suite.
 
 ## Using it for a new project
 
@@ -59,7 +63,7 @@ autocomplete).
    "$CLAUDE_SHARED_REPO/setup.sh" godot      # skip the menu
    ```
 
-   Supported project types: `generic`, `godot`.
+   Supported project types: `generic`, `godot`, `love2d`.
 
 3. `setup.sh` will:
    - Create `.claude/commands/`, `docs/wiki/`, and `scripts/` if missing.
@@ -145,6 +149,12 @@ Newest first; each entry links to its pull request.
 
 ### 2026-06-30
 
+- **New `love2d` project type**
+  ([#15](https://github.com/sfrazer/ClaudeTemplating/pull/15)) — adds a Love2D/Lua game
+  type: a lean `love2d-conventions.md` snippet (Lua landmines, Love2D essentials, busted
+  testing, references) and a `busted`-based `scripts/run_tests.sh`. Shares the `game`
+  interview overlay with `godot`. Registered in `lib/common.sh` (`PROJECT_TYPES`,
+  `asset_dir_for`, `overlay_for`).
 - **Rename `godot-game` → `godot`; share one game interview overlay**
   ([#14](https://github.com/sfrazer/ClaudeTemplating/pull/14)) — the Godot project type
   is now just `godot` (matching its asset folder), and the interview overlay moves to

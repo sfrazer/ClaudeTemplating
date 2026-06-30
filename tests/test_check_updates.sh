@@ -18,6 +18,13 @@ test_check_clean_after_setup_godot() {
   assert_match "$out" "Up to date"
 }
 
+test_check_clean_after_setup_love2d() {
+  local p; p="$(make_project)"
+  do_setup "$p" love2d --no-repo >/dev/null 2>&1 || fail "setup exited $?"
+  local out; out="$(do_check "$p" --no-pull)" || fail "check exited $?"
+  assert_match "$out" "Up to date"
+}
+
 test_check_reports_and_reinstalls_missing() {
   local p; p="$(make_project)"
   do_setup "$p" godot --no-repo >/dev/null 2>&1 || fail "setup exited $?"

@@ -8,7 +8,7 @@
 # overlay_for (type -> interview overlay). Any new script that sources this file
 # gets the same supported-type set.
 # shellcheck disable=SC2034  # consumed by scripts that source this file
-PROJECT_TYPES=("generic" "godot")
+PROJECT_TYPES=("generic" "godot" "love2d")
 
 # asset_dir_for <project-type> — echo the asset folder for a project type, or
 # empty string if the type is unknown. (Type and folder happen to match today,
@@ -17,6 +17,7 @@ asset_dir_for() {
   case "$1" in
     generic) echo "generic" ;;
     godot)   echo "godot" ;;
+    love2d)  echo "love2d" ;;
     *)       echo "" ;;
   esac
 }
@@ -26,8 +27,8 @@ asset_dir_for() {
 # Game types share a single "game" overlay; generic has none.
 overlay_for() {
   case "$1" in
-    godot) echo "game" ;;
-    *)     echo "" ;;
+    godot|love2d) echo "game" ;;
+    *)            echo "" ;;
   esac
 }
 
