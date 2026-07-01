@@ -7,16 +7,18 @@ test_common_asset_dir_mapping() {
   assert_eq "$(asset_dir_for generic)"  "generic" "generic maps to generic"
   assert_eq "$(asset_dir_for godot)"    "godot"   "godot maps to godot"
   assert_eq "$(asset_dir_for love2d)"   "love2d"  "love2d maps to love2d"
+  assert_eq "$(asset_dir_for puppet)"   "puppet"  "puppet maps to puppet"
   assert_eq "$(asset_dir_for nonsense)" ""        "unknown type maps to empty"
 }
 
 test_common_overlay_mapping() {
   # shellcheck source=/dev/null
   source "$COMMON"
-  assert_eq "$(overlay_for godot)"    "game" "godot uses the game overlay"
-  assert_eq "$(overlay_for love2d)"   "game" "love2d shares the game overlay"
-  assert_eq "$(overlay_for generic)"  ""     "generic has no overlay"
-  assert_eq "$(overlay_for nonsense)" ""     "unknown type has no overlay"
+  assert_eq "$(overlay_for godot)"    "game"   "godot uses the game overlay"
+  assert_eq "$(overlay_for love2d)"   "game"   "love2d shares the game overlay"
+  assert_eq "$(overlay_for puppet)"   "puppet" "puppet has its own overlay"
+  assert_eq "$(overlay_for generic)"  ""       "generic has no overlay"
+  assert_eq "$(overlay_for nonsense)" ""       "unknown type has no overlay"
 }
 
 test_common_project_types_contract() {
@@ -25,6 +27,7 @@ test_common_project_types_contract() {
   assert_match " ${PROJECT_TYPES[*]} " " generic "
   assert_match " ${PROJECT_TYPES[*]} " " godot "
   assert_match " ${PROJECT_TYPES[*]} " " love2d "
+  assert_match " ${PROJECT_TYPES[*]} " " puppet "
 }
 
 test_common_file_hash_matches_shasum() {
