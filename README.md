@@ -53,6 +53,11 @@ autocomplete).
   `PATH`; install with `luarocks install busted`); for other project types the script is
   absent and the command reports "tests not configured" rather than failing — add your
   own `scripts/run_tests.sh` to enable the suite.
+- **`/export-build`** (Godot) runs `scripts/export.sh` to produce a shareable, unsigned
+  macOS `.app`, verifies the pack, and zips it for hand-off. The Godot template ships
+  `export.sh`; set its `APP_NAME` and `PRESET` (a macOS *unsigned* export preset) for your
+  project, and install the macOS export templates for your Godot version. Requires macOS
+  (`ditto`, `xattr`).
 
 ## Using it for a new project
 
@@ -151,6 +156,13 @@ Newest first; each entry links to its pull request.
 
 ### 2026-07-01
 
+- **Godot macOS export tooling + export gotchas**
+  ([#17](https://github.com/sfrazer/ClaudeTemplating/pull/17)) — adds an `/export-build`
+  command (a thin wrapper around a shipped `scripts/export.sh` that produces an unsigned
+  macOS `.app`, verifies the packed `.pck` for directory-scanned resources, zips it with
+  `ditto`, and prints Gatekeeper-bypass instructions) and two Godot conventions rules: a
+  runtime `res://` directory scan must tolerate the `.remap` suffix (or exported data
+  silently vanishes), and asset references must match the file's on-disk case.
 - **New `puppet` project type**
   ([#16](https://github.com/sfrazer/ClaudeTemplating/pull/16)) — adds a Puppet control-repo
   type aimed at an existing installation mid-migration from Puppet 5 to 6. Ships a

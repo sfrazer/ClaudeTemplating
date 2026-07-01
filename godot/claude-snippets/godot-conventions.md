@@ -88,6 +88,14 @@ Enemies placed in the level process continuously regardless of player proximity.
 If a `BaseButton` (`TextureButton`, etc.) begins a drag on `button_down` and the drag's mouse-release is consumed elsewhere — e.g. a higher-priority `_input` handler calling `set_input_as_handled()` before the GUI sees it — the button never receives its `button_up` and Godot leaves it internally pressed. The next click on that button is swallowed (it just clears the stuck press); a *different* button working fine is the diagnostic tell.
 - **Fix:** After the drag starts, clear the press state by toggling `disabled` true→false, deferred — so it runs after the current input frame and never renders disabled.
 
+#### A runtime `res://` directory scan must tolerate the `.remap` suffix
+In an exported build, Godot converts text resources and `DirAccess.get_files()` lists them as `<name>.tres.remap` (the `.remap` redirects `load()` to the packed binary), where in-editor they are plain `<name>.tres`. Code that scans a directory and filters on a `.tres`/`.tscn` extension matches nothing in the export, so the data silently vanishes — the editor looks fine but the export ships empty (this caused an empty parts box in a real export).
+- **Do:** Strip a trailing `.remap` before the extension check; `load()` follows the remap in both environments. Verify the exported `.pck` actually contains the scanned resources (see the `/export-build` command's pack-verification step).
+
+#### Asset references must match the file's on-disk case
+macOS is case-insensitive, so a `.tscn`/`.tres` that references `res://assets/Foo.PNG` when the file on disk is `Foo.png` loads fine locally but fails on case-sensitive platforms and warns at export time ("Case mismatch"). The editor gives no error, so it's easy to commit.
+- **Do:** Make each asset reference's case exactly match the file on disk.
+
 ### Spawner System
 
 Each spawner is a `Marker2D` with a `VisibleOnScreenNotifier2D` and a `Timer`.
