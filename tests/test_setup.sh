@@ -24,6 +24,16 @@ test_setup_ships_generic_script_to_every_type() {
   assert_exec "$p/source/debug/tests/godot_screenshot.sh"
 }
 
+test_setup_godot_ships_export_build() {
+  # The macOS export tooling: a run_tests-style export.sh template and its /export-build
+  # wrapper command, both shipped to a godot project.
+  local p; p="$(make_project)"
+  do_setup "$p" godot --no-repo >/dev/null 2>&1 || fail "setup godot exited $?"
+  assert_exec "$p/scripts/export.sh"
+  assert_file "$p/.claude/commands/export-build.md"
+  assert_contains "$p/.claude/.template-manifest" "godot/templates/scripts/export.sh"
+}
+
 test_setup_scripts_are_executable() {
   local p; p="$(make_project)"
   do_setup "$p" generic --no-repo >/dev/null 2>&1 || fail "setup exited $?"
@@ -37,6 +47,7 @@ test_setup_generates_settings_with_allow_rules() {
   # Exact (bare) rules — the primary case, since the scripts are invoked bare.
   assert_grep "$p/.claude/settings.json" '"Bash\(scripts/code_review.sh\)"'
   assert_grep "$p/.claude/settings.json" '"Bash\(scripts/run_tests.sh\)"'
+  assert_grep "$p/.claude/settings.json" '"Bash\(scripts/export.sh\)"'
   assert_grep "$p/.claude/settings.json" '"Bash\(source/debug/tests/godot_screenshot.sh\)"'
   # Wildcard (with-args) and ./-prefixed forms also present.
   assert_grep "$p/.claude/settings.json" '"Bash\(scripts/run_tests.sh \*\)"'
