@@ -16,7 +16,7 @@
 # The shared commands repo (the repo this script lives in) is located via the
 # CLAUDE_SHARED_REPO environment variable, defaulting to ~/.claude-shared.
 #
-# Supported project types: generic, godot, love2d.
+# Supported project types: generic, godot, love2d, puppet.
 
 set -euo pipefail
 

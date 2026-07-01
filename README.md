@@ -19,6 +19,8 @@ godot/                   # Godot-game assets
 love2d/                  # Love2D/Lua game assets
   claude-snippets/       # Love2D + Lua conventions snippet
   templates/             # Files copied into the project tree (e.g. scripts/run_tests.sh)
+puppet/                  # Puppet control-repo assets (brownfield, Puppet 5 → 6)
+  claude-snippets/       # Puppet conventions snippet
 interviews/
   base.md                # The core requirements interview
   overlays/              # Interview additions by overlay name (e.g. game.md, shared by game types)
@@ -63,7 +65,7 @@ autocomplete).
    "$CLAUDE_SHARED_REPO/setup.sh" godot      # skip the menu
    ```
 
-   Supported project types: `generic`, `godot`, `love2d`.
+   Supported project types: `generic`, `godot`, `love2d`, `puppet`.
 
 3. `setup.sh` will:
    - Create `.claude/commands/`, `docs/wiki/`, and `scripts/` if missing.
@@ -146,6 +148,17 @@ Notes:
 ## Changelog
 
 Newest first; each entry links to its pull request.
+
+### 2026-07-01
+
+- **New `puppet` project type**
+  ([#16](https://github.com/sfrazer/ClaudeTemplating/pull/16)) — adds a Puppet control-repo
+  type aimed at an existing installation mid-migration from Puppet 5 to 6. Ships a
+  `puppet-conventions.md` snippet (5→6 migration landmines like the removed-from-core
+  resource types, roles & profiles, Hiera 5, idempotency/validation) and a brownfield
+  interview overlay (`interviews/overlays/puppet.md`) that surveys the imported codebase
+  first, then fills gaps and remaps the base output docs to a control repo. Conventions +
+  interview only — no template/test runner yet. Registered in `lib/common.sh`.
 
 ### 2026-06-30
 

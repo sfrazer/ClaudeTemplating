@@ -98,6 +98,21 @@ test_setup_love2d_assembles_expected_files() {
   assert_contains "$p/.claude/.template-manifest" "type=love2d"
 }
 
+test_setup_puppet_assembles_snippet_and_own_overlay() {
+  # Puppet ships a conventions snippet and its own interview overlay, but no templates —
+  # exercises the snippet-only asset path and a non-game overlay.
+  local p; p="$(make_project)"
+  do_setup "$p" puppet --no-repo >/dev/null 2>&1 || fail "setup puppet exited $?"
+  assert_contains "$p/CLAUDE.md" "Puppet Conventions"
+  assert_contains "$p/INTERVIEW.md" "## Overlay: Puppet control repo"
+  assert_contains "$p/.claude/.template-manifest" "puppet/claude-snippets/puppet-conventions.md"
+  assert_contains "$p/.claude/.template-manifest" "type=puppet"
+  # Generic templates still ship to a puppet project.
+  assert_exec "$p/scripts/code_review.sh"
+  # No puppet-specific test runner shipped (conventions + interview only).
+  refute_exists "$p/scripts/run_tests.sh"
+}
+
 test_setup_unknown_type_fails() {
   local p; p="$(make_project)"
   assert_status 1 "unknown type" do_setup "$p" not-a-type --no-repo
